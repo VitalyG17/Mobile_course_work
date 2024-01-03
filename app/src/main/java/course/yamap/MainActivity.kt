@@ -9,6 +9,7 @@ import android.graphics.Color
 import android.graphics.PointF
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
@@ -17,6 +18,8 @@ import androidx.core.content.ContextCompat
 import com.yandex.mapkit.Animation
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.geometry.Point
+import com.yandex.mapkit.layers.GeoObjectTapEvent
+import com.yandex.mapkit.layers.GeoObjectTapListener
 import com.yandex.mapkit.layers.ObjectEvent
 import com.yandex.mapkit.logo.Alignment
 import com.yandex.mapkit.logo.HorizontalAlignment
@@ -24,8 +27,11 @@ import com.yandex.mapkit.logo.VerticalAlignment
 import com.yandex.mapkit.map.CameraListener
 import com.yandex.mapkit.map.CameraPosition
 import com.yandex.mapkit.map.CameraUpdateReason
+import com.yandex.mapkit.map.GeoObjectSelectionMetadata
 import com.yandex.mapkit.map.Map
+import com.yandex.mapkit.map.MapObject
 import com.yandex.mapkit.map.MapObjectCollection
+import com.yandex.mapkit.map.MapObjectTapListener
 import com.yandex.mapkit.map.PlacemarkMapObject
 import com.yandex.mapkit.user_location.UserLocationLayer
 import com.yandex.mapkit.user_location.UserLocationObjectListener
@@ -41,11 +47,12 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
     private lateinit var userLocationLayer: UserLocationLayer
     private lateinit var mapObjectCollection: MapObjectCollection // Коллекция различных объектов на карте
     private lateinit var placemarkMapObject: PlacemarkMapObject // Геопозиционированный объект (метка со значком) на карте
+    private lateinit var placemarkMapObject1: PlacemarkMapObject
 
     private var belgorodLocation = Point(50.595289, 36.587130) // Координаты Белгорода
     private var startLocation = Point(0.0, 0.0)
     private var favoriteLocation = Point(37.422915, -122.088981)
-
+    private var favoriteLocation1 = Point(37.421785, -122.079524)
     private val zoomValue: Float = 14.5f // Величина зума
 
     private var permissionLocation = false //Есть ли разрешение на определение местоположения.
@@ -55,6 +62,7 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
         super.onCreate(savedInstanceState)
         setApiKey(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
+        binding.mapview.map.addTapListener(geoObjectTapListener) // Добавляем слушатель тапов по объектам
 
         val view = binding.root
         setContentView(view)
@@ -71,6 +79,7 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
         checkPermission()
         userInterface()
         setMarkerInStartLocation()
+
     }
 
     private fun setMarkerInStartLocation() {
@@ -78,7 +87,31 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
         mapObjectCollection = binding.mapview.map.mapObjects // Инициализируем коллекцию различных объектов на карте
         placemarkMapObject = mapObjectCollection.addPlacemark(favoriteLocation, ImageProvider.fromBitmap(marker)) // Добавляем метку со значком
         placemarkMapObject.opacity = 0.9f // Устанавливка прозрачности метке
-        //placemarkMapObject.addTapListener(mapObjectTapListener)
+        placemarkMapObject.addTapListener(mapObjectTapListener)
+
+        placemarkMapObject1 = mapObjectCollection.addPlacemark(favoriteLocation1, ImageProvider.fromBitmap(marker))
+        placemarkMapObject1.opacity = 0.9f
+        placemarkMapObject1.addTapListener(mapObjectTapListener)
+    }
+
+    //Отображение информации о месте
+    private val mapObjectTapListener = object : MapObjectTapListener {
+        override fun onMapObjectTap(mapObject: MapObject, point: Point): Boolean {
+            Toast.makeText(applicationContext, "Любимое место", Toast.LENGTH_SHORT).show()
+            return true
+        }
+    }
+
+    //Выделение объекта при нажатии
+    private val geoObjectTapListener = object : GeoObjectTapListener {
+        override fun onObjectTap(geoObjectTapEvent: GeoObjectTapEvent): Boolean {
+            val selectionMetadata: GeoObjectSelectionMetadata = geoObjectTapEvent
+                .geoObject
+                .metadataContainer
+                .getItem(GeoObjectSelectionMetadata::class.java)
+            binding.mapview.map.selectGeoObject(selectionMetadata)
+            return false
+        }
     }
 
     //Проверка разрешений на определение местоположения
@@ -254,4 +287,5 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
         const val MAPKIT_API_KEY = "a9e6fdbd-c9ab-4668-b9c3-ef111ab8f7f0"
     }
 }
+
 
