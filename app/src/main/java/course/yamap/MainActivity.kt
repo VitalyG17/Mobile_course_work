@@ -2,11 +2,16 @@ package course.yamap
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.PointF
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.yandex.mapkit.Animation
@@ -20,21 +25,27 @@ import com.yandex.mapkit.map.CameraListener
 import com.yandex.mapkit.map.CameraPosition
 import com.yandex.mapkit.map.CameraUpdateReason
 import com.yandex.mapkit.map.Map
+import com.yandex.mapkit.map.MapObjectCollection
 import com.yandex.mapkit.map.PlacemarkMapObject
 import com.yandex.mapkit.user_location.UserLocationLayer
 import com.yandex.mapkit.user_location.UserLocationObjectListener
 import com.yandex.mapkit.user_location.UserLocationView
 import com.yandex.runtime.image.ImageProvider
 import course.yamap.databinding.ActivityMainBinding
+import java.io.IOException
 
 
 class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraListener {
     private lateinit var binding: ActivityMainBinding
     private lateinit var checkLocationPermission: ActivityResultLauncher<Array<String>>
     private lateinit var userLocationLayer: UserLocationLayer
+    private lateinit var mapObjectCollection: MapObjectCollection // Коллекция различных объектов на карте
+    private lateinit var placemarkMapObject: PlacemarkMapObject // Геопозиционированный объект (метка со значком) на карте
 
     private var belgorodLocation = Point(50.595289, 36.587130) // Координаты Белгорода
     private var startLocation = Point(0.0, 0.0)
+    private var favoriteLocation = Point(37.422915, -122.088981)
+
     private val zoomValue: Float = 14.5f // Величина зума
 
     private var permissionLocation = false //Есть ли разрешение на определение местоположения.
@@ -56,8 +67,18 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
                 onMapReady()
             }
         }
+
         checkPermission()
         userInterface()
+        setMarkerInStartLocation()
+    }
+
+    private fun setMarkerInStartLocation() {
+        val marker = createBitmapFromVector(R.drawable.ic_heart_svg)
+        mapObjectCollection = binding.mapview.map.mapObjects // Инициализируем коллекцию различных объектов на карте
+        placemarkMapObject = mapObjectCollection.addPlacemark(favoriteLocation, ImageProvider.fromBitmap(marker)) // Добавляем метку со значком
+        placemarkMapObject.opacity = 0.9f // Устанавливка прозрачности метке
+        //placemarkMapObject.addTapListener(mapObjectTapListener)
     }
 
     //Проверка разрешений на определение местоположения
@@ -126,7 +147,7 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
             )
         } else {
             binding.mapview.map.move(CameraPosition(startLocation, zoomValue, 0f, 0f),
-            Animation(Animation.Type.SMOOTH, 3.5f), null // Анимация при переходе на точку
+                Animation(Animation.Type.SMOOTH, 3.5f), null // Анимация при переходе на точку
             )
         }
     }
@@ -200,7 +221,18 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
     }
 
 
-
+    private fun createBitmapFromVector(@DrawableRes vectorDrawableId: Int): Bitmap {
+        val vectorDrawable = ContextCompat.getDrawable(this, vectorDrawableId)
+        vectorDrawable!!.setBounds(0, 0, vectorDrawable.intrinsicWidth, vectorDrawable.intrinsicHeight)
+        val bitmap = Bitmap.createBitmap(
+            vectorDrawable.intrinsicWidth,
+            vectorDrawable.intrinsicHeight,
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bitmap)
+        vectorDrawable.draw(canvas)
+        return bitmap
+    }
 
 
     override fun onObjectUpdated(p0: UserLocationView, p1: ObjectEvent) {}
@@ -222,3 +254,4 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
         const val MAPKIT_API_KEY = "a9e6fdbd-c9ab-4668-b9c3-ef111ab8f7f0"
     }
 }
+
