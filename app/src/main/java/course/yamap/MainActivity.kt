@@ -20,6 +20,7 @@ import com.yandex.mapkit.map.CameraListener
 import com.yandex.mapkit.map.CameraPosition
 import com.yandex.mapkit.map.CameraUpdateReason
 import com.yandex.mapkit.map.Map
+import com.yandex.mapkit.map.PlacemarkMapObject
 import com.yandex.mapkit.user_location.UserLocationLayer
 import com.yandex.mapkit.user_location.UserLocationObjectListener
 import com.yandex.mapkit.user_location.UserLocationView
@@ -82,7 +83,8 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
     /*Устанавливает положение логотипа Якарты.
     Устанавливает обработчик кнопки отображения местоположения*/
     private fun userInterface() {
-        val mapLogoAlignment = Alignment(HorizontalAlignment.LEFT, VerticalAlignment.BOTTOM)
+        val mapLogoAlignment = Alignment(HorizontalAlignment.RIGHT, VerticalAlignment.TOP)
+        val favoritePlaceFab = binding.favoritePlace
         binding.mapview.map.logo.setAlignment(mapLogoAlignment)
         binding.userLocationFab.setOnClickListener {
             if (permissionLocation) {
@@ -91,7 +93,15 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
             } else {
                 moveToBelgorodLocation()
             }
+
         }
+        favoritePlaceFab.setOnClickListener {
+            clickHeartButton()
+        }
+    }
+
+    private fun clickHeartButton() {
+
     }
 
     private fun onMapReady() {
@@ -119,6 +129,14 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
             Animation(Animation.Type.SMOOTH, 3.5f), null // Анимация при переходе на точку
             )
         }
+    }
+
+    //Переход камеры к координатам Белгорода
+    private fun moveToBelgorodLocation() {
+        binding.mapview.map.move(
+            CameraPosition(belgorodLocation, zoomValue, 0.0f, 0.0f), // Позиция камеры
+            Animation(Animation.Type.SMOOTH, 1.5f), null // Анимация при переходе
+        )
     }
 
     //Обработчик изменения позиции камеры на карте.
@@ -160,14 +178,6 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
         binding.userLocationFab.setImageResource(R.drawable.ic_location_searching_black_24dp)
     }
 
-    //Переход камеры к координатам Белгорода
-    private fun moveToBelgorodLocation() {
-        binding.mapview.map.move(
-            CameraPosition(belgorodLocation, zoomValue, 0.0f, 0.0f), // Позиция камеры
-            Animation(Animation.Type.SMOOTH, 1.5f), null // Анимация при переходе
-        )
-    }
-
     //Сохранение API-ключа, если активность потребуется воссоздать
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
@@ -188,6 +198,10 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
         userLocationView.arrow.setIcon(ImageProvider.fromResource(this, R.drawable.user_arrow))
         userLocationView.accuracyCircle.fillColor = Color.CYAN
     }
+
+
+
+
 
     override fun onObjectUpdated(p0: UserLocationView, p1: ObjectEvent) {}
     override fun onObjectRemoved(p0: UserLocationView) {}

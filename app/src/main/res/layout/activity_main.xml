@@ -9,7 +9,9 @@
     <com.yandex.mapkit.mapview.MapView
         android:id="@+id/mapview"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        tools:layout_editor_absoluteX="-199dp"
+        tools:layout_editor_absoluteY="0dp">
 
     </com.yandex.mapkit.mapview.MapView>
 
@@ -26,4 +28,19 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/ic_location_disabled_black_24dp"
         tools:ignore="MissingConstraints" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/favorite_place"
+        android:layout_width="@dimen/widthButtonLocation"
+        android:layout_height="@dimen/heightButtonLocation"
+        android:layout_gravity="bottom|end"
+        android:layout_marginStart="8dp"
+        android:layout_marginBottom="8dp"
+        app:backgroundTint="@color/colorNull"
+        app:elevation="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:srcCompat="@drawable/ic_heart_svg"
+        tools:ignore="MissingConstraints" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
