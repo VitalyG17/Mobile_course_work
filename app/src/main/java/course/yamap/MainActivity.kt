@@ -8,7 +8,6 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.PointF
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,17 +27,26 @@ import com.yandex.mapkit.map.CameraListener
 import com.yandex.mapkit.map.CameraPosition
 import com.yandex.mapkit.map.CameraUpdateReason
 import com.yandex.mapkit.map.GeoObjectSelectionMetadata
+import com.yandex.mapkit.map.InputListener
 import com.yandex.mapkit.map.Map
 import com.yandex.mapkit.map.MapObject
 import com.yandex.mapkit.map.MapObjectCollection
 import com.yandex.mapkit.map.MapObjectTapListener
 import com.yandex.mapkit.map.PlacemarkMapObject
+import com.yandex.mapkit.search.Address
+import com.yandex.mapkit.search.Response
+import com.yandex.mapkit.search.SearchFactory
+import com.yandex.mapkit.search.SearchManager
+import com.yandex.mapkit.search.SearchManagerType
+import com.yandex.mapkit.search.SearchOptions
+import com.yandex.mapkit.search.Session
+import com.yandex.mapkit.search.ToponymObjectMetadata
 import com.yandex.mapkit.user_location.UserLocationLayer
 import com.yandex.mapkit.user_location.UserLocationObjectListener
 import com.yandex.mapkit.user_location.UserLocationView
 import com.yandex.runtime.image.ImageProvider
 import course.yamap.databinding.ActivityMainBinding
-import java.io.IOException
+
 
 
 class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraListener {
@@ -46,13 +54,12 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
     private lateinit var checkLocationPermission: ActivityResultLauncher<Array<String>>
     private lateinit var userLocationLayer: UserLocationLayer
     private lateinit var mapObjectCollection: MapObjectCollection // Коллекция различных объектов на карте
-    private lateinit var placemarkMapObject: PlacemarkMapObject // Геопозиционированный объект (метка со значком) на карте
-    private lateinit var placemarkMapObject1: PlacemarkMapObject
+    lateinit var searchManager: SearchManager
+    lateinit var searchSession: Session
 
     private var belgorodLocation = Point(50.595289, 36.587130) // Координаты Белгорода
     private var startLocation = Point(0.0, 0.0)
-    private var favoriteLocation = Point(37.422915, -122.088981)
-    private var favoriteLocation1 = Point(37.421785, -122.079524)
+
     private val zoomValue: Float = 14.5f // Величина зума
 
     private var permissionLocation = false //Есть ли разрешение на определение местоположения.
@@ -63,7 +70,8 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
         setApiKey(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         binding.mapview.map.addTapListener(geoObjectTapListener) // Добавляем слушатель тапов по объектам
-
+        binding.mapview.map.addInputListener(inputListener) // Добавляем слушатель тапов по карте с извлечением информации об улицах
+        mapObjectCollection = binding.mapview.map.mapObjects // Инициализируем коллекцию различных объектов на карте
         val view = binding.root
         setContentView(view)
 
@@ -78,28 +86,8 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
 
         checkPermission()
         userInterface()
-        setMarkerInStartLocation()
 
-    }
-
-    private fun setMarkerInStartLocation() {
-        val marker = createBitmapFromVector(R.drawable.ic_heart_svg)
-        mapObjectCollection = binding.mapview.map.mapObjects // Инициализируем коллекцию различных объектов на карте
-        placemarkMapObject = mapObjectCollection.addPlacemark(favoriteLocation, ImageProvider.fromBitmap(marker)) // Добавляем метку со значком
-        placemarkMapObject.opacity = 0.9f // Устанавливка прозрачности метке
-        placemarkMapObject.addTapListener(mapObjectTapListener)
-
-        placemarkMapObject1 = mapObjectCollection.addPlacemark(favoriteLocation1, ImageProvider.fromBitmap(marker))
-        placemarkMapObject1.opacity = 0.9f
-        placemarkMapObject1.addTapListener(mapObjectTapListener)
-    }
-
-    //Отображение информации о месте
-    private val mapObjectTapListener = object : MapObjectTapListener {
-        override fun onMapObjectTap(mapObject: MapObject, point: Point): Boolean {
-            Toast.makeText(applicationContext, "Любимое место", Toast.LENGTH_SHORT).show()
-            return true
-        }
+        searchManager = SearchFactory.getInstance().createSearchManager(SearchManagerType.ONLINE)
     }
 
     //Выделение объекта при нажатии
@@ -111,6 +99,67 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
                 .getItem(GeoObjectSelectionMetadata::class.java)
             binding.mapview.map.selectGeoObject(selectionMetadata)
             return false
+        }
+    }
+
+    //Метаданные информации об улице
+    private val searchListener = object : Session.SearchListener {
+        override fun onSearchResponse(response: Response) {
+            val street = response.collection.children.firstOrNull()?.obj
+                ?.metadataContainer
+                ?.getItem(ToponymObjectMetadata::class.java)
+                ?.address
+                ?.components
+                ?.firstOrNull { it.kinds.contains(Address.Component.Kind.STREET)}
+                ?.name ?: "Информация об улице не найдена"
+
+            Toast.makeText(applicationContext, street, Toast.LENGTH_SHORT).show()
+        }
+        override fun onSearchError(p0: com.yandex.runtime.Error) {
+            TODO("Not yet implemented")
+        }
+    }
+
+    //Установка маркера
+    private fun setMarker(pointIn: Point) {
+        val markerImageProvider = ImageProvider.fromResource(this, marker)
+        val placemarkMapObject = mapObjectCollection.addPlacemark(pointIn, markerImageProvider)
+        placemarkMapObject.opacity = 0.9f // Прозрачность
+        placemarkMapObject.addTapListener(object : MapObjectTapListener {
+            override fun onMapObjectTap(mapObject: MapObject, point: Point): Boolean {
+                // Обработка нажатия на маркер
+                Toast.makeText(applicationContext, "Любимое место", Toast.LENGTH_SHORT).show()
+                return true
+            }
+        })
+        markerDataList[Num] = placemarkMapObject // Хранение меток
+        Num += 1
+    }
+
+    //Cлушатель нажатий одиночного и продолжительного
+    private val inputListener = object : InputListener {
+        override fun onMapTap(map: Map, point: Point) {
+            searchSession = searchManager.submit(point, 20, SearchOptions(), searchListener)
+        }
+        override fun onMapLongTap(map: Map, point: Point) {
+            setMarker(point)
+        }
+    }
+
+    // Нажатие на кнопку удаления маркера
+    private fun clickHeartButton() {
+        if (markerDataList.isNotEmpty()) {
+            // Получение ключа последнего добавленного маркера
+            val lastMarkerKey = markerDataList.keys.last()
+            // Получение маркера из списка и удаление его
+            val lastMarker = markerDataList.remove(lastMarkerKey)
+            lastMarker?.let {
+                // Удаление маркера из коллекции объектов на карте
+                binding.mapview.map.mapObjects.remove(it)
+                Toast.makeText(applicationContext, "Метка успешно удалена", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(applicationContext, "Нет меток для удаления", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -152,10 +201,6 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
         favoritePlaceFab.setOnClickListener {
             clickHeartButton()
         }
-    }
-
-    private fun clickHeartButton() {
-
     }
 
     private fun onMapReady() {
@@ -267,7 +312,6 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
         return bitmap
     }
 
-
     override fun onObjectUpdated(p0: UserLocationView, p1: ObjectEvent) {}
     override fun onObjectRemoved(p0: UserLocationView) {}
 
@@ -285,7 +329,12 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
 
     companion object {
         const val MAPKIT_API_KEY = "a9e6fdbd-c9ab-4668-b9c3-ef111ab8f7f0"
+        val marker = R.drawable.ic_heart_png
+        val markerDataList = HashMap<Int, PlacemarkMapObject>()
+        var Num : Int = 0
     }
 }
+
+
 
 
