@@ -4,11 +4,13 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
+import course.yamap.Data.BitmapConverter
 
-@Database(entities = [MarkerEntity::class], version = 1, exportSchema = false)
+@Database(entities = [MarkerEntity::class], version = 2, exportSchema = false)
+@TypeConverters(BitmapConverter::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun markerDao(): MarkerDao
-
 
     companion object {
         @Volatile

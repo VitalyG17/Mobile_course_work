@@ -1,48 +1,56 @@
 package course.yamap
 
+import android.app.Activity
+import android.content.Intent
 import android.graphics.Bitmap
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
-import android.widget.ImageView
+import android.provider.MediaStore
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import course.yamap.Data.DataBase.AppDatabase
 import course.yamap.Data.DataBase.MarkerEntity
 import course.yamap.databinding.ActivityShowInfoBinding
 
 class ShowInfoActivity : AppCompatActivity() {
     lateinit var binding: ActivityShowInfoBinding
+    private var selectedImageBitmap: Bitmap? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityShowInfoBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        val databse = AppDatabase.getDatabase(this)
+        val database = AppDatabase.getDatabase(this)
 
         binding.saveFloatingActionButton.setOnClickListener {
-            val marker = MarkerEntity(null,
+            val marker = MarkerEntity(
+                null,
                 binding.descriptionEditText.text.toString(),
                 binding.commentsEditText.text.toString(),
-                binding.commentsEditText.text.toString(),
-                //getBitmapFromImageView(binding.pictureImageView)
-                )
+                selectedImageBitmap
+            )
             Thread {
-                databse.markerDao().insertMarker(marker)
+                database.markerDao().insertMarker(marker)
             }.start()
+        }
+
+        binding.pictureImageView.setOnClickListener {
+            openGallery()
         }
     }
 
-    // Функция для извлечения битмапа из ImageView
-    private fun getBitmapFromImageView(imageView: ImageView): Bitmap? {
-        imageView.isDrawingCacheEnabled = true
-        imageView.measure(
-            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
-            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        )
-        imageView.layout(0, 0, imageView.measuredWidth, imageView.measuredHeight)
-        imageView.buildDrawingCache(true)
+    private fun openGallery() {
+        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        getImage.launch(intent)
+    }
 
-        val bitmap = Bitmap.createBitmap(imageView.drawingCache)
-        imageView.isDrawingCacheEnabled = false
-
-        return bitmap
+    private val getImage = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val uri = result.data?.data
+            uri?.let {
+                binding.pictureImageView.setImageURI(uri)
+                // Преобразование URI в Bitmap
+                selectedImageBitmap = MediaStore.Images.Media.getBitmap(contentResolver, uri)
+            }
+        }
     }
 }
