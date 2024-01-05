@@ -1,9 +1,9 @@
 package course.yamap
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.PointF
@@ -14,7 +14,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.room.Room
 import com.yandex.mapkit.Animation
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.geometry.Point
@@ -46,7 +45,6 @@ import com.yandex.mapkit.user_location.UserLocationLayer
 import com.yandex.mapkit.user_location.UserLocationObjectListener
 import com.yandex.mapkit.user_location.UserLocationView
 import com.yandex.runtime.image.ImageProvider
-import course.yamap.Data.DataBase.AppDatabase
 import course.yamap.databinding.ActivityMainBinding
 
 
@@ -89,8 +87,23 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
         checkPermission()
         userInterface()
 
+
         searchManager = SearchFactory.getInstance().createSearchManager(SearchManagerType.ONLINE)
+
+        // Действие при нажатии на кнопку со звездочкой
+        val savefloatingActionButton = binding.saveFloatingActionButton
+        savefloatingActionButton.setOnClickListener {
+            navigateToShowInfoActivity()
+        }
     }
+
+    // Функция для перехода на ShowInfoActivity
+    private fun navigateToShowInfoActivity() {
+        val intent = Intent(this, ShowInfoActivity::class.java)
+        startActivity(intent)
+    }
+
+
 
     //Выделение объекта при нажатии
     private val geoObjectTapListener = object : GeoObjectTapListener {
@@ -336,7 +349,3 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
         var Num : Int = 0
     }
 }
-
-
-
-

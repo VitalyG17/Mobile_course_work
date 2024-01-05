@@ -55,9 +55,11 @@ dependencies {
     //YandexMap
     implementation ("com.yandex.android:maps.mobile:4.4.0-full")
     val room_version = "2.6.1"
-
+    //DataBase
     implementation("androidx.room:room-runtime:$room_version")
     annotationProcessor("androidx.room:room-compiler:$room_version")
     kapt("androidx.room:room-compiler:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
+    //LiveData
+    implementation("androidx.lifecycle:lifecycle-livedata-core-ktx:2.6.2")
 }
