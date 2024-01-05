@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.provider.MediaStore
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import course.yamap.Data.DataBase.AppDatabase
@@ -22,20 +23,33 @@ class ShowInfoActivity : AppCompatActivity() {
         val database = AppDatabase.getDatabase(this)
 
         binding.saveFloatingActionButton.setOnClickListener {
-            val marker = MarkerEntity(
-                null,
-                binding.descriptionEditText.text.toString(),
-                binding.commentsEditText.text.toString(),
-                selectedImageBitmap
-            )
-            Thread {
-                database.markerDao().insertMarker(marker)
-            }.start()
+            if (areFieldsValid()) {
+                val marker = MarkerEntity(
+                    null,
+                    binding.descriptionEditText.text.toString(),
+                    binding.commentsEditText.text.toString(),
+                    selectedImageBitmap
+                )
+
+                Thread {
+                    database.markerDao().insertMarker(marker)
+                    runOnUiThread {
+                        Toast.makeText(this, "Запись добавлена", Toast.LENGTH_LONG).show()
+                    }
+                }.start()
+            } else {
+                Toast.makeText(this, "Пожалуйста заполните все поля", Toast.LENGTH_SHORT).show()
+            }
         }
 
         binding.pictureImageView.setOnClickListener {
             openGallery()
         }
+    }
+
+    private fun areFieldsValid(): Boolean {
+        return binding.descriptionEditText.text.isNotBlank() &&
+                binding.commentsEditText.text.isNotBlank()
     }
 
     private fun openGallery() {
