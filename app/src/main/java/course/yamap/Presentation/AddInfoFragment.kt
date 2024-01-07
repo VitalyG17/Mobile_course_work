@@ -20,6 +20,10 @@ import course.yamap.Data.DataBase.AppDatabase
 import course.yamap.Data.DataBase.MarkerEntity
 import course.yamap.databinding.FragmentAddInfoBinding
 import course.yamap.R
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class AddInfoFragment : Fragment() {
     private var selectedImageBitmap: Bitmap? = null
@@ -45,21 +49,24 @@ class AddInfoFragment : Fragment() {
                     null,
                     descriptionEditText.text.toString(),
                     commentsEditText.text.toString(),
-                    selectedImageBitmap ?: getDefaultBitmap()
-
+                    selectedImageBitmap ?: getDefaultBitmap(),
+                    0.0,
+                    0.0
                 )
 
-                Thread {
+                CoroutineScope(Dispatchers.IO).launch {
                     database.markerDao().insertMarker(marker)
-                    requireActivity().runOnUiThread {
+
+                    withContext(Dispatchers.Main) {
                         Toast.makeText(requireContext(), "Запись добавлена", Toast.LENGTH_LONG).show()
                         navController.navigate(R.id.markerListFragment2)
                     }
-                }.start()
+                }
             } else {
                 Toast.makeText(requireContext(), "Пожалуйста, заполните все поля", Toast.LENGTH_SHORT).show()
             }
         }
+
 
         pictureImageView.setOnClickListener {
             openGallery()

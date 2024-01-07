@@ -47,10 +47,17 @@ import com.yandex.mapkit.user_location.UserLocationLayer
 import com.yandex.mapkit.user_location.UserLocationObjectListener
 import com.yandex.mapkit.user_location.UserLocationView
 import com.yandex.runtime.image.ImageProvider
+import course.yamap.Data.DataBase.AppDatabase
+import course.yamap.Data.DataBase.MarkerDao
+import course.yamap.Data.DataBase.MarkerEntity
 import course.yamap.MainActivity
 import course.yamap.R
 import course.yamap.databinding.ActivityMainBinding
 import course.yamap.databinding.FragmentYaMapBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
 
@@ -70,17 +77,18 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
     private var followUserLocation = false //Включен ли режим следования за пользователем на карте.
 
     private lateinit var navController: NavController
+    private lateinit var markerDao: MarkerDao
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
 
-//        setApiKey(savedInstanceState)
         binding = FragmentYaMapBinding.inflate(inflater,container,false)
         binding.mapview.map.addTapListener(geoObjectTapListener) // Добавляем слушатель тапов по объектам
         binding.mapview.map.addInputListener(inputListener) // Добавляем слушатель тапов по карте с извлечением информации об улицах
         mapObjectCollection = binding.mapview.map.mapObjects // Инициализируем коллекцию различных объектов на карте
+        markerDao = AppDatabase.getDatabase(requireContext()).markerDao()
 
         checkLocationPermission = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
@@ -149,12 +157,19 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
         placemarkMapObject.addTapListener(object : MapObjectTapListener {
             override fun onMapObjectTap(mapObject: MapObject, point: Point): Boolean {
                 // Обработка нажатия на маркер
+                //navController.navigate(R.id.addInfoFragment2)
                 Toast.makeText(requireContext(), "Любимое место", Toast.LENGTH_SHORT).show()
                 return true
             }
         })
-        markerDataList[Num] = placemarkMapObject // Хранение меток
-        Num += 1
+        // Вставка новой метки в БД фоново
+        GlobalScope.launch(Dispatchers.IO) {
+            markerDao.insertMarker(
+                MarkerEntity(
+                    null, null, null, null, pointIn.latitude, pointIn.longitude
+                )
+            )
+        }
     }
 
     //Cлушатель нажатий одиночного и продолжительного
@@ -163,26 +178,26 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
             searchSession = searchManager.submit(point, 20, SearchOptions(), searchListener)
         }
         override fun onMapLongTap(map: Map, point: Point) {
-
             setMarker(point)
         }
     }
 
-    // Нажатие на кнопку удаления маркера
+    // Удаление последней метки в БД и очистка карты
     private fun clickHeartButton() {
-        if (markerDataList.isNotEmpty()) {
-            // Получение ключа последнего добавленного маркера
-            val lastMarkerKey = markerDataList.keys.last()
-            // Получение маркера из списка и удаление его
-            val lastMarker = markerDataList.remove(lastMarkerKey)
+        GlobalScope.launch(Dispatchers.IO) {
+            val lastMarker = markerDao.getLastMarker()
             lastMarker?.let {
-                // Удаление маркера из коллекции объектов на карте
-                binding.mapview.map.mapObjects.remove(it)
-                Toast.makeText(requireContext(), "Метка успешно удалена", Toast.LENGTH_SHORT).show()
+                markerDao.deleteMarker(it)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(requireContext(), "Метка успешно удалена", Toast.LENGTH_SHORT).show()
+                }
+            } ?: run {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(requireContext(), "Нет меток для удаления", Toast.LENGTH_SHORT).show()
+                }
             }
-        } else {
-            Toast.makeText(requireContext(), "Нет меток для удаления", Toast.LENGTH_SHORT).show()
         }
+        clearMap()
     }
 
     //Проверка разрешений на определение местоположения
@@ -299,21 +314,6 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
         binding.userLocationFab2.setImageResource(R.drawable.ic_location_searching_black_24dp)
     }
 
-
-//    //Сохранение API-ключа, если активность потребуется воссоздать
-//    override fun onSaveInstanceState(outState: Bundle) {
-//        super.onSaveInstanceState(outState)
-//        outState.putBoolean(MainActivity.MAPKIT_API_KEY,true)
-//    }
-//
-//    //Проверяет наличие API-ключа в активности. Для проверки его единоразовой установки
-//    private fun setApiKey(savedInstanceState: Bundle?) {
-//        val haveApiKey = savedInstanceState?.getBoolean(MainActivity.MAPKIT_API_KEY) ?: false
-//        if (!haveApiKey) {
-//            MapKitFactory.setApiKey(MainActivity.MAPKIT_API_KEY)
-//        }
-//    }
-
     override fun onObjectAdded(userLocationView: UserLocationView) {
         setAnchor()
         userLocationView.pin.setIcon(ImageProvider.fromResource(requireContext(), R.drawable.user_arrow))
@@ -323,7 +323,6 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
 
     override fun onObjectUpdated(p0: UserLocationView, p1: ObjectEvent) {}
     override fun onObjectRemoved(p0: UserLocationView) {}
-
 
     override fun onStop() {
         binding.mapview.onStop()
@@ -335,16 +334,39 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
         binding.mapview.onStart()
         MapKitFactory.getInstance().onStart()
         super.onStart()
+        loadMarkersFromDatabase()
+    }
+
+    // Возвращает список всех меток из БД
+    private fun loadMarkersFromDatabase() {
+        GlobalScope.launch(Dispatchers.IO) {
+            val markers = markerDao.getAllMarkers() // Получение всех меток из БД
+            withContext(Dispatchers.Main) {
+                displayMarkersOnMap(markers)
+            }
+        }
+    }
+
+    // Отображение меток на карте
+    private fun displayMarkersOnMap(markers: List<MarkerEntity>) {
+        for (marker in markers) {
+            val point = Point(marker.latitude, marker.longitude)
+            setMarker(point)
+        }
     }
 
     override fun onResume() {
         super.onResume()
+        clearMap()
+    }
+
+    private fun clearMap() {
+        binding.mapview.map.mapObjects.clear()
+        markerDataList.clear()
     }
 
     companion object {
-//        val MAPKIT_API_KEY = "a9e6fdbd-c9ab-4668-b9c3-ef111ab8f7f0"
         val marker = R.drawable.ic_heart_png
         val markerDataList = HashMap<Int, PlacemarkMapObject>()
-        var Num : Int = 0
     }
 }
