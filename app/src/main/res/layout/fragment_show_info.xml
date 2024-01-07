@@ -11,18 +11,6 @@
         android:layout_height="match_parent">
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/listFloatingActionButton2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginBottom="16dp"
-            android:clickable="true"
-            app:backgroundTint="@color/colorNull"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/backFloatingActionButton2"
-            app:srcCompat="@android:drawable/ic_input_get" />
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/backFloatingActionButton2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import course.yamap.Data.BitmapConverter
 
-@Database(entities = [MarkerEntity::class], version = 2, exportSchema = false)
+@Database(entities = [MarkerEntity::class], version = 3, exportSchema = false)
 @TypeConverters(BitmapConverter::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun markerDao(): MarkerDao

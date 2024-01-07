@@ -1,6 +1,7 @@
 package course.yamap.Presentation
 
 import MarkerAdapter
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import course.yamap.Data.DataBase.AppDatabase
 import course.yamap.Data.DataBase.MarkerDao
 import course.yamap.Data.DataBase.MarkerEntity
+import course.yamap.Presentation.MarkerListFragmentDirections
 import course.yamap.R
 import course.yamap.databinding.FragmentMarkerListBinding
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +22,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MarkerListFragment : Fragment() {
+
     private var _binding: FragmentMarkerListBinding? = null
     private val binding get() = _binding!!
 
@@ -33,17 +36,14 @@ class MarkerListFragment : Fragment() {
         _binding = FragmentMarkerListBinding.inflate(inflater, container, false)
 
         navController = findNavController()
-        binding.backFloatingActionButton4.setOnClickListener {
-            navController.navigate(R.id.yaMapFragment)
-        }
-        binding.addFloatingAction.setOnClickListener {
-            navController.navigate(R.id.addInfoFragment2)
-        }
 
         val appDatabase = AppDatabase.getDatabase(requireContext())
         markerDao = appDatabase.markerDao()
 
-        val adapter = MarkerAdapter(requireContext(), mutableListOf())
+        val adapter = MarkerAdapter(requireContext(), mutableListOf()) { markerId ->
+            navigateToShowInfoFragment(markerId)
+        }
+
         binding.rcView.adapter = adapter
         binding.rcView.layoutManager = LinearLayoutManager(requireContext())
 
@@ -52,7 +52,19 @@ class MarkerListFragment : Fragment() {
             adapter.setData(markerList)
         }
 
+        binding.backFloatingActionButton4.setOnClickListener {
+            navController.navigate(R.id.yaMapFragment)
+        }
+        binding.addFloatingAction.setOnClickListener {
+            navController.navigate(R.id.addInfoFragment2)
+        }
+
         return binding.root
+    }
+
+    private fun navigateToShowInfoFragment(markerId: Int) {
+        val action = MarkerListFragmentDirections.actionMarkerListFragment2ToShowInfoFragment2(markerId)
+        navController.navigate(action)
     }
 
     private suspend fun getMarkerListFromDatabase(): List<MarkerEntity> {

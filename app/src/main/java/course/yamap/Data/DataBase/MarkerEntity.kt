@@ -8,9 +8,9 @@ import androidx.room.PrimaryKey
 data class MarkerEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int? = null,
-    val description: String,
-    val comments: String,
-    val image: Bitmap?
+    val description: String?,
+    val comments: String?,
+    val image: Bitmap?,
+    val latitude: Double,
+    val longitude: Double
 )
-
-

@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
     app:startDestination="@id/yaMapFragment">
+
     <fragment
         android:id="@+id/markerListFragment2"
         android:name="course.yamap.Presentation.MarkerListFragment"
@@ -15,7 +16,11 @@
         <action
             android:id="@+id/action_markerListFragment2_to_yaMapFragment"
             app:destination="@id/yaMapFragment" />
+        <action
+            android:id="@+id/action_markerListFragment2_to_showInfoFragment2"
+            app:destination="@id/showInfoFragment2" />
     </fragment>
+
     <fragment
         android:id="@+id/addInfoFragment2"
         android:name="course.yamap.Presentation.AddInfoFragment"
@@ -28,15 +33,20 @@
             android:id="@+id/action_addInfoFragment2_to_markerListFragment2"
             app:destination="@id/markerListFragment2" />
     </fragment>
+
     <fragment
         android:id="@+id/showInfoFragment2"
         android:name="course.yamap.Presentation.ShowInfoFragment"
         android:label="fragment_show_info"
         tools:layout="@layout/fragment_show_info" >
+        <argument
+            android:name="markerId"
+            app:argType="integer" />
         <action
             android:id="@+id/action_showInfoFragment2_to_markerListFragment2"
             app:destination="@id/markerListFragment2" />
     </fragment>
+
     <fragment
         android:id="@+id/yaMapFragment"
         android:name="course.yamap.Presentation.YaMapFragment"
@@ -46,4 +56,5 @@
             android:id="@+id/action_yaMapFragment_to_markerListFragment2"
             app:destination="@id/markerListFragment2" />
     </fragment>
+
 </navigation>
