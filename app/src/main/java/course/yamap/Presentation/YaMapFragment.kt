@@ -81,7 +81,7 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
         savedInstanceState: Bundle?
     ): View? {
 
-        setApiKey(savedInstanceState)
+//        setApiKey(savedInstanceState)
         binding = FragmentYaMapBinding.inflate(inflater,container,false)
         binding.mapview.map.addTapListener(geoObjectTapListener) // Добавляем слушатель тапов по объектам
         binding.mapview.map.addInputListener(inputListener) // Добавляем слушатель тапов по карте с извлечением информации об улицах
@@ -115,6 +115,11 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
         binding.listFloatingActionButton3.setOnClickListener {
             // Выполнить переход к фрагменту MarkerListFragment2
             navController.navigate(R.id.markerListFragment2)
+        }
+
+        binding.saveFloatingActionButton2.setOnClickListener {
+            // Выполнить переход к фрагменту addInfoFragment2
+            navController.navigate(R.id.addInfoFragment2)
         }
 
         return binding.root
@@ -309,19 +314,19 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
     }
 
 
-    //Сохранение API-ключа, если активность потребуется воссоздать
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putBoolean(YaMapFragment.MAPKIT_API_KEY,true)
-    }
-
-    //Проверяет наличие API-ключа в активности. Для проверки его единоразовой установки
-    private fun setApiKey(savedInstanceState: Bundle?) {
-        val haveApiKey = savedInstanceState?.getBoolean(MAPKIT_API_KEY) ?: false
-        if (!haveApiKey) {
-            MapKitFactory.setApiKey(MAPKIT_API_KEY)
-        }
-    }
+//    //Сохранение API-ключа, если активность потребуется воссоздать
+//    override fun onSaveInstanceState(outState: Bundle) {
+//        super.onSaveInstanceState(outState)
+//        outState.putBoolean(MainActivity.MAPKIT_API_KEY,true)
+//    }
+//
+//    //Проверяет наличие API-ключа в активности. Для проверки его единоразовой установки
+//    private fun setApiKey(savedInstanceState: Bundle?) {
+//        val haveApiKey = savedInstanceState?.getBoolean(MainActivity.MAPKIT_API_KEY) ?: false
+//        if (!haveApiKey) {
+//            MapKitFactory.setApiKey(MainActivity.MAPKIT_API_KEY)
+//        }
+//    }
 
     override fun onObjectAdded(userLocationView: UserLocationView) {
         setAnchor()
@@ -346,8 +351,12 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
         super.onStart()
     }
 
+    override fun onResume() {
+        super.onResume()
+    }
+
     companion object {
-        val MAPKIT_API_KEY = "a9e6fdbd-c9ab-4668-b9c3-ef111ab8f7f0"
+//        val MAPKIT_API_KEY = "a9e6fdbd-c9ab-4668-b9c3-ef111ab8f7f0"
         val marker = R.drawable.ic_heart_png
         val markerDataList = HashMap<Int, PlacemarkMapObject>()
         var Num : Int = 0
