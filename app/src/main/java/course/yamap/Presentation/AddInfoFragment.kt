@@ -3,6 +3,7 @@ package course.yamap.Presentation
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.LayoutInflater
@@ -13,15 +14,18 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import androidx.navigation.NavController
+import androidx.navigation.fragment.findNavController
 import course.yamap.Data.DataBase.AppDatabase
 import course.yamap.Data.DataBase.MarkerEntity
 import course.yamap.databinding.FragmentAddInfoBinding
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import course.yamap.R
 
 class AddInfoFragment : Fragment() {
     private var selectedImageBitmap: Bitmap? = null
     private lateinit var database: AppDatabase
-    private lateinit var binding: FragmentAddInfoBinding // Добавлено объявление binding
+    private lateinit var binding: FragmentAddInfoBinding
+    private lateinit var navController: NavController
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -33,21 +37,23 @@ class AddInfoFragment : Fragment() {
         val descriptionEditText: EditText = binding.descriptionEditText
         val commentsEditText: EditText = binding.commentsEditText
         val pictureImageView: ImageView = binding.pictureImageView
-        val saveFloatingActionButton: FloatingActionButton = binding.saveFloatingActionButton
+        navController = findNavController()
 
-        saveFloatingActionButton.setOnClickListener {
+        binding.saveFloatingActionButton.setOnClickListener {
             if (areFieldsValid(descriptionEditText, commentsEditText)) {
                 val marker = MarkerEntity(
                     null,
                     descriptionEditText.text.toString(),
                     commentsEditText.text.toString(),
-                    selectedImageBitmap
+                    selectedImageBitmap ?: getDefaultBitmap()
+
                 )
 
                 Thread {
                     database.markerDao().insertMarker(marker)
                     requireActivity().runOnUiThread {
                         Toast.makeText(requireContext(), "Запись добавлена", Toast.LENGTH_LONG).show()
+                        navController.navigate(R.id.markerListFragment2)
                     }
                 }.start()
             } else {
@@ -59,7 +65,12 @@ class AddInfoFragment : Fragment() {
             openGallery()
         }
 
-        return binding.root // Используем binding.root вместо view
+        binding.backFloatingActionButton.setOnClickListener {
+            // Выполнить переход к фрагменту yaMapFragment
+            navController.navigate(R.id.yaMapFragment)
+        }
+
+        return binding.root
     }
 
     private fun areFieldsValid(descriptionEditText: EditText, commentsEditText: EditText): Boolean {
@@ -81,5 +92,8 @@ class AddInfoFragment : Fragment() {
                 selectedImageBitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
             }
         }
+    }
+    private fun getDefaultBitmap(): Bitmap {
+        return BitmapFactory.decodeResource(resources, R.drawable.ic_picture)
     }
 }

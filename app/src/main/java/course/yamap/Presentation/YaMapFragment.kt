@@ -71,11 +71,6 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
 
     private lateinit var navController: NavController
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -86,7 +81,6 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
         binding.mapview.map.addTapListener(geoObjectTapListener) // Добавляем слушатель тапов по объектам
         binding.mapview.map.addInputListener(inputListener) // Добавляем слушатель тапов по карте с извлечением информации об улицах
         mapObjectCollection = binding.mapview.map.mapObjects // Инициализируем коллекцию различных объектов на карте
-        val view = binding.root
 
         checkLocationPermission = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
@@ -100,14 +94,7 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
         checkPermission()
         userInterface()
 
-
         searchManager = SearchFactory.getInstance().createSearchManager(SearchManagerType.ONLINE)
-
-//        // Действие при нажатии на кнопку со звездочкой
-//        val savefloatingActionButton = binding.saveFloatingActionButton2
-//        savefloatingActionButton.setOnClickListener {
-//            navigateToShowInfoActivity()
-//        }
 
         // Найти NavController
         navController = findNavController()
@@ -124,7 +111,6 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
 
         return binding.root
     }
-
 
     //Выделение объекта при нажатии
     private val geoObjectTapListener = object : GeoObjectTapListener {
@@ -184,11 +170,11 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
 
     // Нажатие на кнопку удаления маркера
     private fun clickHeartButton() {
-        if (YaMapFragment.markerDataList.isNotEmpty()) {
+        if (markerDataList.isNotEmpty()) {
             // Получение ключа последнего добавленного маркера
-            val lastMarkerKey = YaMapFragment.markerDataList.keys.last()
+            val lastMarkerKey = markerDataList.keys.last()
             // Получение маркера из списка и удаление его
-            val lastMarker = YaMapFragment.markerDataList.remove(lastMarkerKey)
+            val lastMarker = markerDataList.remove(lastMarkerKey)
             lastMarker?.let {
                 // Удаление маркера из коллекции объектов на карте
                 binding.mapview.map.mapObjects.remove(it)
