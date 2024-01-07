@@ -12,3 +12,5 @@ data class MarkerEntity(
     val comments: String,
     val image: Bitmap?
 )
+
+
