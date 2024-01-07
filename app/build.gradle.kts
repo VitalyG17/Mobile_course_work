@@ -62,4 +62,5 @@ dependencies {
     implementation("androidx.room:room-ktx:$room_version")
     //LiveData
     implementation("androidx.lifecycle:lifecycle-livedata-core-ktx:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
 }

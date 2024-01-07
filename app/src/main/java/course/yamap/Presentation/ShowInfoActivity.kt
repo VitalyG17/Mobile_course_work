@@ -1,4 +1,4 @@
-package course.yamap
+package course.yamap.Presentation
 
 import android.app.Activity
 import android.content.Intent
@@ -15,12 +15,14 @@ import course.yamap.databinding.ActivityShowInfoBinding
 class ShowInfoActivity : AppCompatActivity() {
     lateinit var binding: ActivityShowInfoBinding
     private var selectedImageBitmap: Bitmap? = null
+    private lateinit var database: AppDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityShowInfoBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        val database = AppDatabase.getDatabase(this)
+
+        database = AppDatabase.getDatabase(this)
 
         binding.saveFloatingActionButton.setOnClickListener {
             if (areFieldsValid()) {
@@ -38,7 +40,7 @@ class ShowInfoActivity : AppCompatActivity() {
                     }
                 }.start()
             } else {
-                Toast.makeText(this, "Пожалуйста заполните все поля", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Пожалуйста, заполните все поля", Toast.LENGTH_SHORT).show()
             }
         }
 

@@ -3,17 +3,17 @@ package course.yamap
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.PointF
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavController
+import androidx.navigation.findNavController
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.yandex.mapkit.Animation
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.geometry.Point
@@ -45,8 +45,8 @@ import com.yandex.mapkit.user_location.UserLocationLayer
 import com.yandex.mapkit.user_location.UserLocationObjectListener
 import com.yandex.mapkit.user_location.UserLocationView
 import com.yandex.runtime.image.ImageProvider
+import course.yamap.Presentation.ShowInfoActivity
 import course.yamap.databinding.ActivityMainBinding
-
 
 
 class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraListener {
@@ -64,6 +64,8 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
 
     private var permissionLocation = false //Есть ли разрешение на определение местоположения.
     private var followUserLocation = false //Включен ли режим следования за пользователем на карте.
+
+    private lateinit var navController: NavController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,6 +97,16 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
         savefloatingActionButton.setOnClickListener {
             navigateToShowInfoActivity()
         }
+
+//        // Найти NavController
+//        navController = findNavController(R.id.fragmentContainerView)
+//
+//        // Назначить обработчик нажатия на listFloatingActionButton
+//        val listFab: FloatingActionButton = findViewById(R.id.listFloatingActionButton)
+//        listFab.setOnClickListener {
+//            // Выполнить переход к фрагменту MarkerListFragment
+//            navController.navigate(R.id.action_markerListFragment2_to_addInfoFragment2)
+//        }
     }
 
     // Функция для перехода на ShowInfoActivity
@@ -102,8 +114,6 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
         val intent = Intent(this, ShowInfoActivity::class.java)
         startActivity(intent)
     }
-
-
 
     //Выделение объекта при нажатии
     private val geoObjectTapListener = object : GeoObjectTapListener {
@@ -311,20 +321,6 @@ class MainActivity : AppCompatActivity(), UserLocationObjectListener, CameraList
         userLocationView.pin.setIcon(ImageProvider.fromResource(this, R.drawable.user_arrow))
         userLocationView.arrow.setIcon(ImageProvider.fromResource(this, R.drawable.user_arrow))
         userLocationView.accuracyCircle.fillColor = Color.CYAN
-    }
-
-
-    private fun createBitmapFromVector(@DrawableRes vectorDrawableId: Int): Bitmap {
-        val vectorDrawable = ContextCompat.getDrawable(this, vectorDrawableId)
-        vectorDrawable!!.setBounds(0, 0, vectorDrawable.intrinsicWidth, vectorDrawable.intrinsicHeight)
-        val bitmap = Bitmap.createBitmap(
-            vectorDrawable.intrinsicWidth,
-            vectorDrawable.intrinsicHeight,
-            Bitmap.Config.ARGB_8888
-        )
-        val canvas = Canvas(bitmap)
-        vectorDrawable.draw(canvas)
-        return bitmap
     }
 
     override fun onObjectUpdated(p0: UserLocationView, p1: ObjectEvent) {}

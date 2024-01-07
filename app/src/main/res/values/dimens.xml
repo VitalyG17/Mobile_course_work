@@ -4,4 +4,6 @@
     <dimen name="heightButtonLocation">64dp</dimen>
     <dimen name="widthEditText">375dp</dimen>
     <dimen name="heightEditText">150dp</dimen>
+    <dimen name="widthImageView">375dp</dimen>
+    <dimen name="heightImageView">245dp</dimen>
 </resources>

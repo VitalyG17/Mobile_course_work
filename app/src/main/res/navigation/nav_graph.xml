@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/markerListFragment2">
+    <fragment
+        android:id="@+id/markerListFragment2"
+        android:name="course.yamap.Presentation.MarkerListFragment"
+        android:label="fragment_marker_list"
+        tools:layout="@layout/fragment_marker_list" >
+        <action
+            android:id="@+id/action_markerListFragment2_to_addInfoFragment2"
+            app:destination="@id/addInfoFragment2" />
+    </fragment>
+    <fragment
+        android:id="@+id/addInfoFragment2"
+        android:name="course.yamap.Presentation.AddInfoFragment"
+        android:label="fragment_add_info"
+        tools:layout="@layout/fragment_add_info" >
+        <action
+            android:id="@+id/action_addInfoFragment2_to_showInfoFragment2"
+            app:destination="@id/showInfoFragment2" />
+        <action
+            android:id="@+id/action_addInfoFragment2_to_markerListFragment2"
+            app:destination="@id/markerListFragment2" />
+    </fragment>
+    <fragment
+        android:id="@+id/showInfoFragment2"
+        android:name="course.yamap.Presentation.ShowInfoFragment"
+        android:label="fragment_show_info"
+        tools:layout="@layout/fragment_show_info" >
+        <action
+            android:id="@+id/action_showInfoFragment2_to_markerListFragment2"
+            app:destination="@id/markerListFragment2" />
+    </fragment>
+</navigation>

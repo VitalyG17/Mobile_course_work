@@ -2,4 +2,5 @@
     <string name="app_name">YaMap</string>
     <string name="comments">Комментарии</string>
     <string name="description">Описание места</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
