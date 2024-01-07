@@ -1,5 +1,6 @@
 package course.yamap.Data.DataBase
 
+import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -13,6 +14,9 @@ interface MarkerDao {
 
     @Query("SELECT * FROM markers")
     suspend fun getAllMarkers(): List<MarkerEntity>
+
+    @Query("SELECT * FROM markers WHERE id=:id LIMIT 1")
+    fun findById(id: Int): LiveData<MarkerEntity>
 
     @Delete
     suspend fun deleteMarker(marker: MarkerEntity)

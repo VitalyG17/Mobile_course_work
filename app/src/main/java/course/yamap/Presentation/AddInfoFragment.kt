@@ -31,7 +31,7 @@ class AddInfoFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        binding = FragmentAddInfoBinding.inflate(inflater, container, false) // Используем binding
+        binding = FragmentAddInfoBinding.inflate(inflater, container, false)
         database = AppDatabase.getDatabase(requireContext())
 
         val descriptionEditText: EditText = binding.descriptionEditText
