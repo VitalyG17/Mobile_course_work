@@ -22,18 +22,6 @@
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@android:drawable/ic_input_get" />
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/saveFloatingActionButton2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:clickable="true"
-            app:backgroundTint="@color/colorNull"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@android:drawable/btn_star_big_on" />
-
         <com.yandex.mapkit.mapview.MapView
             android:id="@+id/mapview"
             android:layout_width="match_parent"

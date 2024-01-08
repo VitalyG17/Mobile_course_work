@@ -19,6 +19,9 @@
         <action
             android:id="@+id/action_markerListFragment2_to_showInfoFragment2"
             app:destination="@id/showInfoFragment2" />
+        <argument
+            android:name="markerId"
+            app:argType="integer" />
     </fragment>
 
     <fragment
@@ -32,6 +35,9 @@
         <action
             android:id="@+id/action_addInfoFragment2_to_markerListFragment2"
             app:destination="@id/markerListFragment2" />
+        <argument
+            android:name="markerId"
+            app:argType="integer" />
     </fragment>
 
     <fragment

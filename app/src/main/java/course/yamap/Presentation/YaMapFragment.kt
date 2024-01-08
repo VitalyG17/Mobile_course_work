@@ -47,6 +47,7 @@ import com.yandex.mapkit.user_location.UserLocationLayer
 import com.yandex.mapkit.user_location.UserLocationObjectListener
 import com.yandex.mapkit.user_location.UserLocationView
 import com.yandex.runtime.image.ImageProvider
+import course.yamap.Data.DataBase.MarkerEntity
 import course.yamap.Presentation.ViewModel.MarkerListViewModel
 import course.yamap.R
 import course.yamap.databinding.FragmentYaMapBinding
@@ -114,11 +115,6 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
             navController.navigate(R.id.markerListFragment2)
         }
 
-        binding.saveFloatingActionButton2.setOnClickListener {
-            // Выполнить переход к фрагменту addInfoFragment2
-            navController.navigate(R.id.addInfoFragment2)
-        }
-
         return binding.root
     }
 
@@ -159,8 +155,6 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
         placemarkMapObject.opacity = 0.9f // Прозрачность
         placemarkMapObject.addTapListener(object : MapObjectTapListener {
             override fun onMapObjectTap(mapObject: MapObject, point: Point): Boolean {
-                // Обработка нажатия на маркер
-                //navController.navigate(R.id.addInfoFragment2)
                 Toast.makeText(requireContext(), "Любимое место", Toast.LENGTH_SHORT).show()
                 return true
             }
@@ -175,6 +169,7 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
 
         override fun onMapLongTap(map: Map, point: Point) {
             viewModel.addMarkers(point)
+
         }
     }
 
@@ -213,7 +208,7 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
     /*Устанавливает положение логотипа Якарты.
     Устанавливает обработчик кнопки отображения местоположения*/
     private fun userInterface() {
-        val mapLogoAlignment = Alignment(HorizontalAlignment.RIGHT, VerticalAlignment.TOP)
+        val mapLogoAlignment = Alignment(HorizontalAlignment.LEFT, VerticalAlignment.TOP)
         val favoritePlaceFab = binding.favoritePlace2
         binding.mapview.map.logo.setAlignment(mapLogoAlignment)
         binding.userLocationFab2.setOnClickListener {
@@ -252,7 +247,7 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
         } else {
             binding.mapview.map.move(
                 CameraPosition(startLocation, zoomValue, 0f, 0f),
-                Animation(Animation.Type.SMOOTH, 3.5f), null // Анимация при переходе на точку
+                Animation(Animation.Type.SMOOTH, 1.5f), null // Анимация при переходе на точку
             )
         }
     }
