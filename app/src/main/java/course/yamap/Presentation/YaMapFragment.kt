@@ -13,8 +13,8 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.viewModels
 import androidx.navigation.NavController
-import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import com.yandex.mapkit.Animation
 import com.yandex.mapkit.MapKitFactory
@@ -47,9 +47,8 @@ import com.yandex.mapkit.user_location.UserLocationLayer
 import com.yandex.mapkit.user_location.UserLocationObjectListener
 import com.yandex.mapkit.user_location.UserLocationView
 import com.yandex.runtime.image.ImageProvider
-import course.yamap.MainActivity
+import course.yamap.Presentation.ViewModel.MarkerListViewModel
 import course.yamap.R
-import course.yamap.databinding.ActivityMainBinding
 import course.yamap.databinding.FragmentYaMapBinding
 
 class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
@@ -71,22 +70,33 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
 
     private lateinit var navController: NavController
 
+    private val viewModel: MarkerListViewModel by viewModels()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
 
-//        setApiKey(savedInstanceState)
-        binding = FragmentYaMapBinding.inflate(inflater,container,false)
+        binding = FragmentYaMapBinding.inflate(inflater, container, false)
         binding.mapview.map.addTapListener(geoObjectTapListener) // Добавляем слушатель тапов по объектам
         binding.mapview.map.addInputListener(inputListener) // Добавляем слушатель тапов по карте с извлечением информации об улицах
-        mapObjectCollection = binding.mapview.map.mapObjects // Инициализируем коллекцию различных объектов на карте
+        mapObjectCollection =
+            binding.mapview.map.mapObjects // Инициализируем коллекцию различных объектов на карте
+
+        viewModel.markerList.observe(viewLifecycleOwner) {
+            clearMap()
+            for (marker in it) {
+                val point = Point(marker.latitude, marker.longitude)
+                setMarker(point)
+            }
+        }
 
         checkLocationPermission = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { permissions ->
             if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+            ) {
                 onMapReady()
             }
         }
@@ -132,11 +142,12 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
                 ?.getItem(ToponymObjectMetadata::class.java)
                 ?.address
                 ?.components
-                ?.firstOrNull { it.kinds.contains(Address.Component.Kind.STREET)}
+                ?.firstOrNull { it.kinds.contains(Address.Component.Kind.STREET) }
                 ?.name ?: "Информация об улице не найдена"
 
             Toast.makeText(requireContext(), street, Toast.LENGTH_SHORT).show()
         }
+
         override fun onSearchError(p0: com.yandex.runtime.Error) {
         }
     }
@@ -149,12 +160,11 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
         placemarkMapObject.addTapListener(object : MapObjectTapListener {
             override fun onMapObjectTap(mapObject: MapObject, point: Point): Boolean {
                 // Обработка нажатия на маркер
+                //navController.navigate(R.id.addInfoFragment2)
                 Toast.makeText(requireContext(), "Любимое место", Toast.LENGTH_SHORT).show()
                 return true
             }
         })
-        markerDataList[Num] = placemarkMapObject // Хранение меток
-        Num += 1
     }
 
     //Cлушатель нажатий одиночного и продолжительного
@@ -162,25 +172,18 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
         override fun onMapTap(map: Map, point: Point) {
             searchSession = searchManager.submit(point, 20, SearchOptions(), searchListener)
         }
-        override fun onMapLongTap(map: Map, point: Point) {
 
-            setMarker(point)
+        override fun onMapLongTap(map: Map, point: Point) {
+            viewModel.addMarkers(point)
         }
     }
 
-    // Нажатие на кнопку удаления маркера
+    // Удаление последней метки в БД и очистка карты
     private fun clickHeartButton() {
-        if (markerDataList.isNotEmpty()) {
-            // Получение ключа последнего добавленного маркера
-            val lastMarkerKey = markerDataList.keys.last()
-            // Получение маркера из списка и удаление его
-            val lastMarker = markerDataList.remove(lastMarkerKey)
-            lastMarker?.let {
-                // Удаление маркера из коллекции объектов на карте
-                binding.mapview.map.mapObjects.remove(it)
-                Toast.makeText(requireContext(), "Метка успешно удалена", Toast.LENGTH_SHORT).show()
-            }
-        } else {
+        try {
+            viewModel.deleteLastMarker()
+            Toast.makeText(requireContext(), "Метка успешно удалена", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
             Toast.makeText(requireContext(), "Нет меток для удаления", Toast.LENGTH_SHORT).show()
         }
     }
@@ -198,10 +201,12 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
         ) {
             onMapReady()
         } else {
-            checkLocationPermission.launch(arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ))
+            checkLocationPermission.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
         }
     }
 
@@ -276,7 +281,7 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
     }
 
     /* Устанавка якоря для отображения местоположения пользователя.
-   Вызывается, когда followUserLocation = true.*/
+    Вызывается, когда followUserLocation = true.*/
     private fun setAnchor() {
         // Установка якоря в центр экрана с учетом высоты и ширины карты
         userLocationLayer.setAnchor(
@@ -299,31 +304,25 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
         binding.userLocationFab2.setImageResource(R.drawable.ic_location_searching_black_24dp)
     }
 
-
-//    //Сохранение API-ключа, если активность потребуется воссоздать
-//    override fun onSaveInstanceState(outState: Bundle) {
-//        super.onSaveInstanceState(outState)
-//        outState.putBoolean(MainActivity.MAPKIT_API_KEY,true)
-//    }
-//
-//    //Проверяет наличие API-ключа в активности. Для проверки его единоразовой установки
-//    private fun setApiKey(savedInstanceState: Bundle?) {
-//        val haveApiKey = savedInstanceState?.getBoolean(MainActivity.MAPKIT_API_KEY) ?: false
-//        if (!haveApiKey) {
-//            MapKitFactory.setApiKey(MainActivity.MAPKIT_API_KEY)
-//        }
-//    }
-
     override fun onObjectAdded(userLocationView: UserLocationView) {
         setAnchor()
-        userLocationView.pin.setIcon(ImageProvider.fromResource(requireContext(), R.drawable.user_arrow))
-        userLocationView.arrow.setIcon(ImageProvider.fromResource(requireContext(), R.drawable.user_arrow))
+        userLocationView.pin.setIcon(
+            ImageProvider.fromResource(
+                requireContext(),
+                R.drawable.user_arrow
+            )
+        )
+        userLocationView.arrow.setIcon(
+            ImageProvider.fromResource(
+                requireContext(),
+                R.drawable.user_arrow
+            )
+        )
         userLocationView.accuracyCircle.fillColor = Color.CYAN
     }
 
     override fun onObjectUpdated(p0: UserLocationView, p1: ObjectEvent) {}
     override fun onObjectRemoved(p0: UserLocationView) {}
-
 
     override fun onStop() {
         binding.mapview.onStop()
@@ -339,12 +338,16 @@ class YaMapFragment : Fragment(), UserLocationObjectListener, CameraListener {
 
     override fun onResume() {
         super.onResume()
+        clearMap()
+    }
+
+    private fun clearMap() {
+        binding.mapview.map.mapObjects.clear()
+        markerDataList.clear()
     }
 
     companion object {
-//        val MAPKIT_API_KEY = "a9e6fdbd-c9ab-4668-b9c3-ef111ab8f7f0"
         val marker = R.drawable.ic_heart_png
         val markerDataList = HashMap<Int, PlacemarkMapObject>()
-        var Num : Int = 0
     }
 }

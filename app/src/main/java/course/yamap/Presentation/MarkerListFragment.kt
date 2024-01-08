@@ -1,7 +1,6 @@
 package course.yamap.Presentation
 
 import MarkerAdapter
-import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,11 +9,10 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import course.yamap.Data.DataBase.AppDatabase
 import course.yamap.Data.DataBase.MarkerDao
 import course.yamap.Data.DataBase.MarkerEntity
-import course.yamap.Presentation.MarkerListFragmentDirections
 import course.yamap.R
 import course.yamap.databinding.FragmentMarkerListBinding
 import kotlinx.coroutines.Dispatchers
@@ -45,7 +43,7 @@ class MarkerListFragment : Fragment() {
         }
 
         binding.rcView.adapter = adapter
-        binding.rcView.layoutManager = LinearLayoutManager(requireContext())
+        binding.rcView.layoutManager = GridLayoutManager(requireContext(),3)
 
         lifecycleScope.launch {
             val markerList = getMarkerListFromDatabase()
